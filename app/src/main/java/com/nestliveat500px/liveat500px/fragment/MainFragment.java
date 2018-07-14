@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.CalendarContract;
 import android.support.v4.app.Fragment;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -30,6 +31,7 @@ public class MainFragment extends Fragment {
 
     private ListView listView;
     private PhotoListAdapter photoListAdapter;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     public MainFragment() {
         super();
@@ -55,7 +57,34 @@ public class MainFragment extends Fragment {
         listView = (ListView) rootView.findViewById(R.id.listView);
         photoListAdapter = new PhotoListAdapter();
         listView.setAdapter(photoListAdapter);
+        swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                reloadData();
+            }
+        });
+        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView absListView, int i) {
 
+            }
+
+            @Override
+            public void onScroll(AbsListView absListView,
+                                 int firstVisibleItem,
+                                 int visibleItemCount,
+                                 int totalItemCount) {
+                swipeRefreshLayout.setEnabled(firstVisibleItem==0);
+            }
+        });
+        reloadData();
+
+
+    }
+
+    private void reloadData() {
+        swipeRefreshLayout.setRefreshing(false); // stop refresh
         Call<PhotoItemCollectionDao> call = HttpManager.getInstance().getApiService().loadPhotoList();
         call.enqueue(new Callback<PhotoItemCollectionDao>() {
             @Override
@@ -67,6 +96,7 @@ public class MainFragment extends Fragment {
                     Toast.makeText(Contextor.getInstance().getContext(), dao.getData().get(0).getCaption(), Toast.LENGTH_SHORT).show();
                 } else {
                     //Handle
+                    swipeRefreshLayout.setRefreshing(false); // stop refresh
                     String Error = response.errorBody().toString();
                     Toast.makeText(Contextor.getInstance().getContext(), Error, Toast.LENGTH_SHORT).show();
                 }
@@ -76,11 +106,9 @@ public class MainFragment extends Fragment {
             public void onFailure(Call<PhotoItemCollectionDao> call, Throwable t) {
                 //Handle
                 Toast.makeText(Contextor.getInstance().getContext(), t.toString(), Toast.LENGTH_SHORT).show();
-
+                swipeRefreshLayout.setRefreshing(false); // stop refresh
             }
         });
-
-
     }
 
     @Override
