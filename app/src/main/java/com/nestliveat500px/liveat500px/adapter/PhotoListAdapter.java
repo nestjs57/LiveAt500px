@@ -2,20 +2,38 @@ package com.nestliveat500px.liveat500px.adapter;
 
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.BaseAdapter;
 import android.widget.TextView;
 
+import com.nestliveat500px.liveat500px.R;
+import com.nestliveat500px.liveat500px.dao.PhotoItemDao;
+import com.nestliveat500px.liveat500px.manager.PhotoListManager;
 import com.nestliveat500px.liveat500px.view.PhotoListItem;
 
 public class PhotoListAdapter extends BaseAdapter {
+
+
+    private PhotoItemDao dao;
+    int lastPosition =  -1;
+
     @Override
     public int getCount() {
-        return 100;
+        if (PhotoListManager.getInstance().getDao() == null) {
+            return 0;
+        }
+        if (PhotoListManager.getInstance().getDao().getData() == null) {
+            return 0;
+        }
+        return PhotoListManager.getInstance().getDao().getData().size();
+
     }
 
     @Override
     public Object getItem(int i) {
-        return null;
+
+        return PhotoListManager.getInstance().getDao().getData().get(i);
     }
 
     @Override
@@ -26,35 +44,28 @@ public class PhotoListAdapter extends BaseAdapter {
     @Override
     public View getView(int i, View view, ViewGroup viewGroup) {
 
-        if (getItemViewType(i) % 2 == 0) {
-            PhotoListItem item;
-            if (view != null) {
-                item = (PhotoListItem) view;
-            } else {
-                item = new PhotoListItem(viewGroup.getContext());
-            }
-            return item;
-        } else {
-            TextView item;
+        PhotoListItem item;
 
-            if (view != null) {
-                item = (TextView) view;
-            } else {
-                item = new TextView(viewGroup.getContext());
-            }
-            item.setText("Position : " + i);
-            return item;
+
+        if (view != null) {
+            item = (PhotoListItem) view;
+        } else {
+            item = new PhotoListItem(viewGroup.getContext());
         }
 
+        dao = (PhotoItemDao) getItem(i);
+        item.setNameText(dao.getCaption());
+        item.setDescriptionText(dao.getUsername() + "\n" + dao.getCamera());
+        item.setImgUrl(dao.getImageUrl());
+
+        if (i > lastPosition){
+            Animation anim = AnimationUtils.loadAnimation(viewGroup.getContext(),
+                    R.anim.up_from_bottom);
+            item.startAnimation(anim);
+            lastPosition = i;
+        }
+
+        return item;
     }
 
-    @Override
-    public int getViewTypeCount() {
-        return 2;
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        return position % 2 == 0 ? 0 : 1;
-    }
 }
