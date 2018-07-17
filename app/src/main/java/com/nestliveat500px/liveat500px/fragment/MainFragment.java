@@ -1,6 +1,7 @@
 package com.nestliveat500px.liveat500px.fragment;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.PowerManager;
 import android.provider.CalendarContract;
@@ -10,13 +11,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AbsListView;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
 import com.inthecheesefactory.thecheeselibrary.manager.Contextor;
 import com.nestliveat500px.liveat500px.R;
+import com.nestliveat500px.liveat500px.activity.MoreInfoActivity;
 import com.nestliveat500px.liveat500px.adapter.PhotoListAdapter;
 import com.nestliveat500px.liveat500px.dao.PhotoItemCollectionDao;
+import com.nestliveat500px.liveat500px.dao.PhotoItemDao;
 import com.nestliveat500px.liveat500px.manager.PhotoListManager;
 import com.nestliveat500px.liveat500px.manager.http.HttpManager;
 
@@ -24,14 +28,24 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-/**
- * Created by nuuneoi on 11/16/2014.
- */
+
 public class MainFragment extends Fragment {
+
+    /*
+    Variable Zone
+     */
+
+    public interface FlagmentListener{
+        void onPhotoItemClicked(PhotoItemDao dao);
+    }
 
     private ListView listView;
     private PhotoListAdapter photoListAdapter;
     private SwipeRefreshLayout swipeRefreshLayout;
+
+    /*
+    Medthod Zone
+     */
 
     public MainFragment() {
         super();
@@ -57,27 +71,11 @@ public class MainFragment extends Fragment {
         listView = (ListView) rootView.findViewById(R.id.listView);
         photoListAdapter = new PhotoListAdapter();
         listView.setAdapter(photoListAdapter);
+        listView.setOnItemClickListener(listViewItemClickListener);
         swipeRefreshLayout = (SwipeRefreshLayout) rootView.findViewById(R.id.swipeRefreshLayout);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                reloadData();
-            }
-        });
-        listView.setOnScrollListener(new AbsListView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(AbsListView absListView, int i) {
 
-            }
-
-            @Override
-            public void onScroll(AbsListView absListView,
-                                 int firstVisibleItem,
-                                 int visibleItemCount,
-                                 int totalItemCount) {
-                swipeRefreshLayout.setEnabled(firstVisibleItem==0);
-            }
-        });
+        swipeRefreshLayout.setOnRefreshListener(refreshLitener);
+        listView.setOnScrollListener(listViewScrollListener);
         reloadData();
 
 
@@ -93,19 +91,20 @@ public class MainFragment extends Fragment {
                     PhotoItemCollectionDao dao = response.body();
                     PhotoListManager.getInstance().setDao(dao);
                     photoListAdapter.notifyDataSetChanged();
-                    Toast.makeText(Contextor.getInstance().getContext(), dao.getData().get(0).getCaption(), Toast.LENGTH_SHORT).show();
+                    showToast(dao.getData().get(0).getCaption());
+
                 } else {
                     //Handle
                     swipeRefreshLayout.setRefreshing(false); // stop refresh
                     String Error = response.errorBody().toString();
-                    Toast.makeText(Contextor.getInstance().getContext(), Error, Toast.LENGTH_SHORT).show();
+                    showToast(Error.toString());
                 }
             }
 
             @Override
             public void onFailure(Call<PhotoItemCollectionDao> call, Throwable t) {
                 //Handle
-                Toast.makeText(Contextor.getInstance().getContext(), t.toString(), Toast.LENGTH_SHORT).show();
+                showToast(t.toString());
                 swipeRefreshLayout.setRefreshing(false); // stop refresh
             }
         });
@@ -140,4 +139,44 @@ public class MainFragment extends Fragment {
             // Restore Instance State here
         }
     }
+
+
+    /*
+    Listener Zone
+     */
+    SwipeRefreshLayout.OnRefreshListener refreshLitener = new SwipeRefreshLayout.OnRefreshListener() {
+        @Override
+        public void onRefresh() {
+            reloadData();
+        }
+    };
+    AbsListView.OnScrollListener listViewScrollListener = new AbsListView.OnScrollListener() {
+        @Override
+        public void onScrollStateChanged(AbsListView absListView, int i) {
+        }
+        @Override
+        public void onScroll(AbsListView absListView,
+                             int firstVisibleItem,
+                             int visibleItemCount,
+                             int totalItemCount) {
+            swipeRefreshLayout.setEnabled(firstVisibleItem == 0);
+        }
+    };
+    AdapterView.OnItemClickListener listViewItemClickListener = new AdapterView.OnItemClickListener() {
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
+//            showToast("Position : "+position);
+            PhotoItemDao dao = PhotoListManager.getInstance().getDao().getData().get(position);
+            FlagmentListener listener = (FlagmentListener) getActivity();
+            listener.onPhotoItemClicked(dao);
+        }
+    };
+
+    /*
+    Inner Class
+     */
+    private void showToast(String text) {
+        Toast.makeText(Contextor.getInstance().getContext(), text, Toast.LENGTH_SHORT).show();
+    }
+
 }

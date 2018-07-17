@@ -26,7 +26,7 @@ import android.util.TypedValue;
 import android.view.View;
 import android.widget.LinearLayout;
 
-class SlidingTabStrip extends LinearLayout {
+public class SlidingTabStrip extends LinearLayout {
 
     private static final int DEFAULT_BOTTOM_BORDER_THICKNESS_DIPS = 0;
     private static final byte DEFAULT_BOTTOM_BORDER_COLOR_ALPHA = 0x26;
@@ -47,7 +47,7 @@ class SlidingTabStrip extends LinearLayout {
     private SlidingTabLayout.TabColorizer mCustomTabColorizer;
     private final SimpleTabColorizer mDefaultTabColorizer;
 
-    SlidingTabStrip(Context context) {
+    public SlidingTabStrip(Context context) {
         this(context, null);
     }
 
@@ -75,19 +75,19 @@ class SlidingTabStrip extends LinearLayout {
         mSelectedIndicatorPaint = new Paint();
     }
 
-    void setCustomTabColorizer(SlidingTabLayout.TabColorizer customTabColorizer) {
+    public void setCustomTabColorizer(SlidingTabLayout.TabColorizer customTabColorizer) {
         mCustomTabColorizer = customTabColorizer;
         invalidate();
     }
 
-    void setSelectedIndicatorColors(int... colors) {
+    public void setSelectedIndicatorColors(int... colors) {
         // Make sure that the custom colorizer is removed
         mCustomTabColorizer = null;
         mDefaultTabColorizer.setIndicatorColors(colors);
         invalidate();
     }
 
-    void onViewPagerPageChanged(int position, float positionOffset) {
+    public void onViewPagerPageChanged(int position, float positionOffset) {
         mSelectedPosition = position;
         mSelectionOffset = positionOffset;
         invalidate();

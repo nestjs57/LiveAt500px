@@ -1,5 +1,6 @@
 package com.nestliveat500px.liveat500px.activity;
 
+import android.content.Intent;
 import android.content.res.Configuration;
 import android.support.annotation.Nullable;
 import android.support.v4.widget.DrawerLayout;
@@ -11,9 +12,11 @@ import android.view.MenuItem;
 import android.widget.Toolbar;
 
 import com.nestliveat500px.liveat500px.R;
+import com.nestliveat500px.liveat500px.dao.PhotoItemDao;
 import com.nestliveat500px.liveat500px.fragment.MainFragment;
+import com.nestliveat500px.liveat500px.fragment.MoreInforFragment;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements MainFragment.FlagmentListener{
 
     private DrawerLayout drawerLayout;
     ActionBarDrawerToggle actionBarDrawerToggle;
@@ -47,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
                 R.string.open_drawer,
                 R.string.close_drawer
         );
-        drawerLayout.setDrawerListener(actionBarDrawerToggle);
+        drawerLayout.addDrawerListener(actionBarDrawerToggle);
         getSupportActionBar().setHomeButtonEnabled(true);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     }
@@ -71,5 +74,12 @@ public class MainActivity extends AppCompatActivity {
             return true;
         return super.onOptionsItemSelected(item);
 
+    }
+
+    @Override
+    public void onPhotoItemClicked(PhotoItemDao dao) {
+        Intent intent = new Intent(MainActivity.this, MoreInfoActivity.class);
+        intent.putExtra("dao",dao);
+        startActivity(intent);
     }
 }
